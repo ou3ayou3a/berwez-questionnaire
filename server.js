@@ -34,7 +34,7 @@ app.post("/api/data/:key", (req, res) => {
 app.delete("/api/data/:key", (req, res) => { del(req.params.key); res.json({ ok: true }); });
 
 app.use(express.static(path.join(__dirname, "dist")));
-app.get("*", (req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));
+app.get("/{*splat}", (req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Berwez Questionnaire running on port ${PORT}`));
