@@ -33,6 +33,87 @@ app.post("/api/data/:key", (req, res) => {
 });
 app.delete("/api/data/:key", (req, res) => { del(req.params.key); res.json({ ok: true }); });
 
+// ── SUBMISSIONS API (individual storage, no race conditions) ─────────────────
+const SUBS_DIR = path.join(DATA_DIR, "submissions");
+if (!fs.existsSync(SUBS_DIR)) fs.mkdirSync(SUBS_DIR, { recursive: true });
+
+function subPath(id) { return path.join(SUBS_DIR, `${id.replace(/[^a-zA-Z0-9_-]/g, "_")}.json`); }
+
+// Get all submissions
+app.get("/api/submissions", (req, res) => {
+  try {
+    if (!fs.existsSync(SUBS_DIR)) return res.json([]);
+    const files = fs.readdirSync(SUBS_DIR).filter(f => f.endsWith('.json'));
+    const subs = files.map(f => {
+      try { return JSON.parse(fs.readFileSync(path.join(SUBS_DIR, f), 'utf-8')); }
+      catch { return null; }
+    }).filter(Boolean);
+    // Sort newest first
+    subs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    res.json(subs);
+  } catch (e) { res.json([]); }
+});
+
+// Save or update a single submission
+app.post("/api/submissions/:id", (req, res) => {
+  try {
+    const sub = req.body;
+    sub.id = req.params.id;
+    fs.writeFileSync(subPath(req.params.id), JSON.stringify(sub), 'utf-8');
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: "Failed to save submission." }); }
+});
+
+// Update a submission (partial — e.g. add analysis)
+app.patch("/api/submissions/:id", (req, res) => {
+  try {
+    const p = subPath(req.params.id);
+    if (!fs.existsSync(p)) return res.status(404).json({ error: "Not found." });
+    const existing = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    const updated = { ...existing, ...req.body };
+    fs.writeFileSync(p, JSON.stringify(updated), 'utf-8');
+    res.json({ ok: true, submission: updated });
+  } catch (e) { res.status(500).json({ error: "Failed to update." }); }
+});
+
+// Delete a single submission
+app.delete("/api/submissions/:id", (req, res) => {
+  try {
+    const p = subPath(req.params.id);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: "Failed to delete." }); }
+});
+
+// Delete all submissions
+app.delete("/api/submissions", (req, res) => {
+  try {
+    if (fs.existsSync(SUBS_DIR)) {
+      fs.readdirSync(SUBS_DIR).forEach(f => fs.unlinkSync(path.join(SUBS_DIR, f)));
+    }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: "Failed to wipe." }); }
+});
+
+// ── MIGRATE: if old "submissions" key exists, split into individual files ────
+(function migrateOldData() {
+  const oldPath = getPath('submissions');
+  if (fs.existsSync(oldPath)) {
+    try {
+      const oldSubs = JSON.parse(fs.readFileSync(oldPath, 'utf-8'));
+      if (Array.isArray(oldSubs) && oldSubs.length > 0) {
+        console.log(`Migrating ${oldSubs.length} submissions from old format...`);
+        oldSubs.forEach(sub => {
+          if (sub && sub.id) fs.writeFileSync(subPath(sub.id), JSON.stringify(sub), 'utf-8');
+        });
+        // Rename old file so we don't migrate again
+        fs.renameSync(oldPath, oldPath + '.migrated');
+        console.log('Migration complete.');
+      }
+    } catch (e) { console.error('Migration error:', e); }
+  }
+})();
+
 // ── CLAUDE AI ANALYSIS ───────────────────────────────────────────────────────
 app.post("/api/analyze", async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;

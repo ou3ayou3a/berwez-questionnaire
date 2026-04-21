@@ -129,6 +129,27 @@ const api = {
     try { await fetch(`/api/data/${key}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({value:JSON.stringify(val)}) }); return true; }
     catch { return false; }
   },
+  // Individual submission endpoints
+  async getAllSubs() {
+    try { const r = await fetch('/api/submissions'); return await r.json(); }
+    catch { return []; }
+  },
+  async saveSub(sub) {
+    try { await fetch(`/api/submissions/${sub.id}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(sub) }); return true; }
+    catch { return false; }
+  },
+  async updateSub(id, changes) {
+    try { await fetch(`/api/submissions/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(changes) }); return true; }
+    catch { return false; }
+  },
+  async deleteSub(id) {
+    try { await fetch(`/api/submissions/${id}`, { method:'DELETE' }); return true; }
+    catch { return false; }
+  },
+  async wipeAllSubs() {
+    try { await fetch('/api/submissions', { method:'DELETE' }); return true; }
+    catch { return false; }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -722,15 +743,14 @@ export default function App() {
   // Load from API on mount
   useEffect(() => {
     (async () => {
-      const [subs, qs] = await Promise.all([api.get('submissions'), api.get('questions')]);
-      setSubmissions(subs || SEED);
+      const [subs, qs] = await Promise.all([api.getAllSubs(), api.get('questions')]);
+      setSubmissions(subs || []);
       setQuestions(qs || DEFAULT_QUESTIONS);
       setLoading(false);
     })();
   }, []);
 
-  // Persist to API on change
-  useEffect(() => { if (submissions !== null) api.set('submissions', submissions); }, [submissions]);
+  // Persist questions to API on change
   useEffect(() => { if (questions !== null) api.set('questions', questions); }, [questions]);
 
   if (loading || !submissions || !questions) return (
@@ -742,16 +762,37 @@ export default function App() {
     </div>
   );
 
-  const addSub = sub => setSubmissions(s => [sub, ...s]);
-  const updateSub = (id, changes) => setSubmissions(s => s.map(x => x.id === id ? { ...x, ...changes } : x));
-  const delSub = id => setSubmissions(s => s.filter(x => x.id !== id));
-  const wipe = () => setSubmissions([]);
+  const addSub = sub => {
+    setSubmissions(s => [sub, ...s]);
+    api.saveSub(sub);
+  };
+  const updateSub = (id, changes) => {
+    setSubmissions(s => s.map(x => x.id === id ? { ...x, ...changes } : x));
+    api.updateSub(id, changes);
+  };
+  const delSub = id => {
+    setSubmissions(s => s.filter(x => x.id !== id));
+    api.deleteSub(id);
+  };
+  const wipe = () => {
+    setSubmissions([]);
+    api.wipeAllSubs();
+  };
   const resetQ = () => setQuestions(DEFAULT_QUESTIONS);
+
+  // Refresh submissions from server when switching to community or dashboard
+  const switchTab = async (newTab) => {
+    setTab(newTab);
+    if (newTab === 'community' || newTab === 'dashboard') {
+      const fresh = await api.getAllSubs();
+      if (fresh && fresh.length > 0) setSubmissions(fresh);
+    }
+  };
 
   return (
     <>
-      <Nav tab={tab} setTab={setTab} />
-      {tab === 'questionnaire' && <Questionnaire onSubmit={addSub} onUpdateSub={updateSub} goTo={setTab} questions={questions} />}
+      <Nav tab={tab} setTab={switchTab} />
+      {tab === 'questionnaire' && <Questionnaire onSubmit={addSub} onUpdateSub={updateSub} goTo={switchTab} questions={questions} />}
       {tab === 'community' && <Community submissions={submissions} questions={questions} />}
       {tab === 'dashboard' && <Dashboard submissions={submissions} questions={questions} onUpdateSub={updateSub} />}
       {tab === 'admin' && <Admin submissions={submissions} questions={questions} setQuestions={setQuestions} onWipeResponses={wipe} onResetQuestions={resetQ} authed={adminAuthed} setAuthed={setAdminAuthed} />}
