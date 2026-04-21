@@ -209,10 +209,10 @@ function QuestionCard({ q, num, answer, note, onAnswer, onNote }) {
   );
 }
 
-function ResultsScreen({ submission, questions, onDone }) {
+function ResultsScreen({ submission, questions, onDone, onUpdateSub }) {
   const scores = useMemo(() => scoreSubmission(submission, questions), [submission, questions]);
   const top5 = scores.slice(0,5);
-  const [analysis, setAnalysis] = useState(null);
+  const [analysis, setAnalysis] = useState(submission.analysis || null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisErr, setAnalysisErr] = useState(null);
 
@@ -232,7 +232,10 @@ function ResultsScreen({ submission, questions, onDone }) {
       });
       const data = await res.json();
       if (data.error) { setAnalysisErr(data.error); }
-      else { setAnalysis(data.analysis); }
+      else {
+        setAnalysis(data.analysis);
+        onUpdateSub?.(submission.id, { analysis: data.analysis });
+      }
     } catch (e) { setAnalysisErr('Network error — could not reach the server.'); }
     setAnalyzing(false);
   };
@@ -290,7 +293,7 @@ function ResultsScreen({ submission, questions, onDone }) {
   );
 }
 
-function Questionnaire({ onSubmit, goTo, questions }) {
+function Questionnaire({ onSubmit, onUpdateSub, goTo, questions }) {
   const [name, setName] = useState('');
   const [answers, setAnswers] = useState({});
   const [notes, setNotes] = useState({});
@@ -307,7 +310,7 @@ function Questionnaire({ onSubmit, goTo, questions }) {
     window.scrollTo({ top:0, behavior:'smooth' });
   };
 
-  if (submitted) return <PageFrame><ResultsScreen submission={submitted} questions={questions} onDone={()=>goTo('community')} /></PageFrame>;
+  if (submitted) return <PageFrame><ResultsScreen submission={submitted} questions={questions} onDone={()=>goTo('community')} onUpdateSub={onUpdateSub} /></PageFrame>;
 
   return (
     <>
@@ -447,8 +450,8 @@ function ComparisonView({ a, b, onClose, questions }) {
                   <div key={q.id} className="card" style={{ padding:'14px 16px', marginBottom:8 }}>
                     <div className="q-text" style={{ fontSize:15 }}><span className="q-num">{q.id}.</span>{q.text}</div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:10 }}>
-                      <div><div className="mono" style={{ color:'var(--espresso-soft)', marginBottom:4 }}>{a.name}</div><AnswerBadge value={aa} />{a.notes?.[q.id]&&<div className="italic-serif" style={{ fontSize:13, color:'var(--espresso-soft)', marginTop:4 }}>"{a.notes[q.id]}"</div>}</div>
-                      <div><div className="mono" style={{ color:'var(--espresso-soft)', marginBottom:4 }}>{b.name}</div><AnswerBadge value={bb} />{b.notes?.[q.id]&&<div className="italic-serif" style={{ fontSize:13, color:'var(--espresso-soft)', marginTop:4 }}>"{b.notes[q.id]}"</div>}</div>
+                      <div><div className="mono" style={{ color:'var(--espresso-soft)', marginBottom:4 }}>{a.name}</div><AnswerBadge value={aa} />{a.notes?.[q.id]&&<div style={{ fontFamily:'var(--serif-display)', fontStyle:'italic', fontSize:15, lineHeight:1.5, color:'var(--wine)', marginTop:6, padding:'6px 10px', borderLeft:'3px solid var(--gold)', background:'rgba(139,105,20,0.06)' }}>"{a.notes[q.id]}"</div>}</div>
+                      <div><div className="mono" style={{ color:'var(--espresso-soft)', marginBottom:4 }}>{b.name}</div><AnswerBadge value={bb} />{b.notes?.[q.id]&&<div style={{ fontFamily:'var(--serif-display)', fontStyle:'italic', fontSize:15, lineHeight:1.5, color:'var(--wine)', marginTop:6, padding:'6px 10px', borderLeft:'3px solid var(--gold)', background:'rgba(139,105,20,0.06)' }}>"{b.notes[q.id]}"</div>}</div>
                     </div>
                   </div>
                 ))}
@@ -535,8 +538,36 @@ function PasswordGate({ onUnlock, title = "The Gate" }) {
   );
 }
 
-function PersonDetail({ sub, onBack, onDelete, questions }) {
+function PersonDetail({ sub, onBack, onDelete, questions, onUpdateSub }) {
   const scores = useMemo(() => scoreSubmission(sub, questions), [sub, questions]);
+  const [analysis, setAnalysis] = useState(sub.analysis || null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisErr, setAnalysisErr] = useState(null);
+
+  const requestAnalysis = async () => {
+    setAnalyzing(true); setAnalysisErr(null);
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: sub.name,
+          answers: sub.answers,
+          notes: sub.notes || {},
+          scores,
+          questions,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { setAnalysisErr(data.error); }
+      else {
+        setAnalysis(data.analysis);
+        onUpdateSub?.(sub.id, { analysis: data.analysis });
+      }
+    } catch (e) { setAnalysisErr('Network error — could not reach the server.'); }
+    setAnalyzing(false);
+  };
+
   return (
     <div className="fade-in">
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}><button className="btn small" onClick={onBack}>← Back</button><div className="mono" style={{ color:'var(--espresso-soft)' }}>{formatDate(sub.date)}</div></div>
@@ -546,10 +577,34 @@ function PersonDetail({ sub, onBack, onDelete, questions }) {
       <div className="section-title"><span className="name" style={{ color:'var(--wine)' }}>Full Ranking</span></div>
       <GoldLine />
       <div style={{ marginTop:14 }}>{scores.map((d,i) => <div key={d.id} className={"denom-row "+(i<3?"top":"")}><div className="rank">{i+1}</div><div className="name">{d.name}</div><div className={"pct "+(d.score>=70?'score-strong':d.score>=50?'score-medium':'score-weak')}>{d.score}%</div><div className="bar progress-bar"><div className="progress-fill" style={{ width:d.score+'%' }} /></div></div>)}</div>
+
+      {/* AI Analysis */}
+      <OrnamentDivider glyph="❦" />
+      {analysis ? (
+        <div className="summary-box fade-in">
+          <h4>Theological Analysis for {sub.name}</h4>
+          {analysis.split('\n\n').map((para, i) => (
+            <p key={i} style={{ fontSize:15.5, lineHeight:1.65 }}>{para}</p>
+          ))}
+        </div>
+      ) : !analyzing ? (
+        <div style={{ textAlign:'center', marginTop:16 }}>
+          <button className="btn primary" onClick={requestAnalysis} style={{ fontSize:13, padding:'14px 36px' }}>
+            ✠  Generate AI Theological Analysis  ✠
+          </button>
+          {analysisErr && <div style={{ color:'var(--red)', marginTop:12, fontStyle:'italic', fontSize:14 }}>{analysisErr}</div>}
+        </div>
+      ) : (
+        <div style={{ textAlign:'center', padding:'30px 20px' }}>
+          <div style={{ color:'var(--gold)', fontSize:32, marginBottom:10 }}>✠</div>
+          <div className="italic-serif" style={{ color:'var(--espresso-soft)', fontSize:16 }}>The theologian is examining {sub.name}'s testimony…</div>
+        </div>
+      )}
+
       {CATEGORIES.map(cat => { const items = questions.filter(q=>q.cat===cat.id); return (
         <div key={cat.id} style={{ marginTop:30 }}>
           <div className="section-title"><span className="roman">{cat.roman}</span><span className="name">{cat.name}</span></div><GoldLine />
-          <div style={{ marginTop:10 }}>{items.map(q => <div key={q.id} style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(139,105,20,0.12)' }}><div style={{ fontSize:15 }}><span className="q-num">{q.id}.</span>{q.text}{sub.notes?.[q.id]&&<div className="italic-serif" style={{ fontSize:13, color:'var(--espresso-soft)', marginTop:4 }}>"{sub.notes[q.id]}"</div>}</div><div><AnswerBadge value={sub.answers[q.id]} /></div></div>)}</div>
+          <div style={{ marginTop:10 }}>{items.map(q => <div key={q.id} style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(139,105,20,0.12)' }}><div style={{ fontSize:15 }}><span className="q-num">{q.id}.</span>{q.text}{sub.notes?.[q.id]&&<div style={{ fontFamily:'var(--serif-display)', fontStyle:'italic', fontSize:15.5, lineHeight:1.55, color:'var(--wine)', marginTop:6, padding:'8px 12px', borderLeft:'3px solid var(--gold)', background:'rgba(139,105,20,0.06)' }}>"{sub.notes[q.id]}"</div>}</div><div><AnswerBadge value={sub.answers[q.id]} /></div></div>)}</div>
         </div>
       ); })}
       {onDelete && <div style={{ marginTop:36, paddingTop:20, borderTop:'1px solid var(--red)' }}><button className="btn danger" onClick={()=>{if(confirm('Delete '+sub.name+"'s response permanently?"))onDelete(sub.id);}}>✗ Delete Response</button></div>}
@@ -557,9 +612,9 @@ function PersonDetail({ sub, onBack, onDelete, questions }) {
   );
 }
 
-function Dashboard({ submissions, questions }) {
+function Dashboard({ submissions, questions, onUpdateSub }) {
   const [detailId, setDetailId] = useState(null);
-  if (detailId) { const sub = submissions.find(s=>s.id===detailId); if (!sub) { setDetailId(null); return null; } return <PageFrame><PersonDetail sub={sub} questions={questions} onBack={()=>setDetailId(null)} /></PageFrame>; }
+  if (detailId) { const sub = submissions.find(s=>s.id===detailId); if (!sub) { setDetailId(null); return null; } return <PageFrame><PersonDetail sub={sub} questions={questions} onBack={()=>setDetailId(null)} onUpdateSub={onUpdateSub} /></PageFrame>; }
   return (
     <PageFrame wide>
       <header style={{ textAlign:'center' }}>
@@ -688,6 +743,7 @@ export default function App() {
   );
 
   const addSub = sub => setSubmissions(s => [sub, ...s]);
+  const updateSub = (id, changes) => setSubmissions(s => s.map(x => x.id === id ? { ...x, ...changes } : x));
   const delSub = id => setSubmissions(s => s.filter(x => x.id !== id));
   const wipe = () => setSubmissions([]);
   const resetQ = () => setQuestions(DEFAULT_QUESTIONS);
@@ -695,9 +751,9 @@ export default function App() {
   return (
     <>
       <Nav tab={tab} setTab={setTab} />
-      {tab === 'questionnaire' && <Questionnaire onSubmit={addSub} goTo={setTab} questions={questions} />}
+      {tab === 'questionnaire' && <Questionnaire onSubmit={addSub} onUpdateSub={updateSub} goTo={setTab} questions={questions} />}
       {tab === 'community' && <Community submissions={submissions} questions={questions} />}
-      {tab === 'dashboard' && <Dashboard submissions={submissions} questions={questions} />}
+      {tab === 'dashboard' && <Dashboard submissions={submissions} questions={questions} onUpdateSub={updateSub} />}
       {tab === 'admin' && <Admin submissions={submissions} questions={questions} setQuestions={setQuestions} onWipeResponses={wipe} onResetQuestions={resetQ} authed={adminAuthed} setAuthed={setAdminAuthed} />}
       <footer style={{ textAlign:'center', padding:'30px 20px 60px', color:'var(--espresso-soft)', fontFamily:'var(--serif-display)', fontSize:13, letterSpacing:'0.15em', textTransform:'uppercase', opacity:0.7 }}>
         <div style={{ color:'var(--gold)', fontSize:18, marginBottom:6 }}>✠ ❦ ✠</div>
