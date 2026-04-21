@@ -514,7 +514,7 @@ function PasswordGate({ onUnlock, title = "The Gate" }) {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState(false);
   const submit = () => {
-    const stored = localStorage.getItem('berwez-pw') || 'berwez';
+    const stored = localStorage.getItem('berwez-pw') || 'Lion@maneagleox';
     if (pw === stored) onUnlock();
     else { setErr(true); setTimeout(() => setErr(false), 2000); }
   };
@@ -529,7 +529,7 @@ function PasswordGate({ onUnlock, title = "The Gate" }) {
         <input className="input" type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} placeholder="••••••••" style={{ textAlign:'center', fontSize:18, letterSpacing:'0.3em' }} />
         {err && <div style={{ color:'var(--red)', marginTop:10, fontStyle:'italic' }}>Incorrect. Try again.</div>}
         <div style={{ marginTop:18 }}><button className="btn primary" onClick={submit}>Enter</button></div>
-        <div className="mono" style={{ color:'var(--espresso-soft)', marginTop:22, fontSize:11 }}>Default password: <strong>berwez</strong></div>
+        <div className="mono" style={{ color:'var(--espresso-soft)', marginTop:22, fontSize:11 }}>Berwez only</div>
       </div>
     </PageFrame>
   );
@@ -588,7 +588,7 @@ function Admin({ submissions, questions, setQuestions, onWipeResponses, onResetQ
   const [pw, setPw] = useState(''); const [pwNew, setPwNew] = useState(''); const [pwMsg, setPwMsg] = useState('');
   if (!authed) return <PasswordGate onUnlock={()=>setAuthed(true)} title="Admin Gate" />;
   const savePwChange = () => {
-    const stored = localStorage.getItem('berwez-pw') || 'berwez';
+    const stored = localStorage.getItem('berwez-pw') || 'Lion@maneagleox';
     if (pw !== stored) { setPwMsg('Current password incorrect.'); return; }
     if (pwNew.length < 4) { setPwMsg('New password too short (min 4).'); return; }
     localStorage.setItem('berwez-pw', pwNew); setPw(''); setPwNew(''); setPwMsg('Password updated.'); setTimeout(()=>setPwMsg(''),2500);
