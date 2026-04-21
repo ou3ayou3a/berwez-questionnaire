@@ -21,54 +21,69 @@ const DENOMS = [
 ];
 
 const DEFAULT_QUESTIONS = [
-  { id:1,cat:'scripture',text:'Is Holy Scripture the sole infallible rule of faith and practice?',weights:{ifb:3,sbc:3,reformedbap:3,presby:2,lutheran:2,anglican:1,catholic:-2,orthodox:-3,pentecostal:2,nondenom:3,methodist:1,anabaptist:2}},
-  { id:2,cat:'scripture',text:'Is Holy Tradition authoritative alongside Scripture for settling doctrine?',weights:{ifb:-3,sbc:-2,reformedbap:-2,presby:-1,lutheran:0,anglican:1,catholic:3,orthodox:3,pentecostal:-1,nondenom:-2,methodist:1,anabaptist:-1}},
-  { id:3,cat:'scripture',text:'Do you hold the King James Version to be uniquely preserved above all other translations?',weights:{ifb:3,sbc:0,reformedbap:0,presby:0,lutheran:-1,anglican:0,catholic:-1,orthodox:-1,pentecostal:0,nondenom:-1,methodist:-1,anabaptist:0}},
-  { id:4,cat:'scripture',text:'Is justification by faith alone (sola fide) a non-negotiable article of the faith?',weights:{ifb:3,sbc:3,reformedbap:3,presby:3,lutheran:3,anglican:2,catholic:-2,orthodox:-2,pentecostal:2,nondenom:2,methodist:1,anabaptist:1}},
-  { id:5,cat:'scripture',text:'Are the ecumenical creeds (Nicene, Apostles\u2019) binding summaries of biblical teaching?',weights:{ifb:0,sbc:1,reformedbap:2,presby:3,lutheran:3,anglican:3,catholic:3,orthodox:3,pentecostal:1,nondenom:1,methodist:2,anabaptist:1}},
-  { id:6,cat:'scripture',text:'Is the doctrine of unconditional election (Calvinism) the correct reading of Scripture?',weights:{ifb:-1,sbc:0,reformedbap:3,presby:3,lutheran:0,anglican:1,catholic:-1,orthodox:-2,pentecostal:-1,nondenom:0,methodist:-2,anabaptist:-1}},
-  { id:7,cat:'scripture',text:'Can a true believer lose their salvation?',weights:{ifb:-2,sbc:-2,reformedbap:-3,presby:-3,lutheran:1,anglican:1,catholic:2,orthodox:2,pentecostal:2,nondenom:0,methodist:2,anabaptist:2}},
-  { id:8,cat:'scripture',text:'Is the Apocrypha (Deuterocanon) properly part of the inspired canon?',weights:{ifb:-3,sbc:-2,reformedbap:-2,presby:-2,lutheran:-1,anglican:0,catholic:3,orthodox:3,pentecostal:-2,nondenom:-2,methodist:-1,anabaptist:-1}},
-  { id:9,cat:'scripture',text:'Is the substitutionary atonement the central lens for Christ\u2019s work on the Cross?',weights:{ifb:3,sbc:3,reformedbap:3,presby:3,lutheran:3,anglican:2,catholic:1,orthodox:-1,pentecostal:2,nondenom:2,methodist:2,anabaptist:1}},
-  { id:10,cat:'scripture',text:'Should doctrine be shaped by ongoing prophetic revelation today?',weights:{ifb:-3,sbc:-2,reformedbap:-3,presby:-3,lutheran:-2,anglican:-1,catholic:-1,orthodox:-2,pentecostal:3,nondenom:1,methodist:0,anabaptist:0}},
-  { id:11,cat:'ecclesiology',text:'Is apostolic succession necessary for a valid ordained ministry?',weights:{ifb:-3,sbc:-2,reformedbap:-2,presby:-1,lutheran:0,anglican:2,catholic:3,orthodox:3,pentecostal:-2,nondenom:-2,methodist:0,anabaptist:-2}},
-  { id:12,cat:'ecclesiology',text:'Should the local congregation be governed by a plurality of elders?',weights:{ifb:-1,sbc:0,reformedbap:3,presby:3,lutheran:1,anglican:1,catholic:0,orthodox:1,pentecostal:0,nondenom:1,methodist:1,anabaptist:1}},
-  { id:13,cat:'ecclesiology',text:'Is infant baptism a faithful practice rooted in covenantal continuity?',weights:{ifb:-3,sbc:-3,reformedbap:-3,presby:3,lutheran:3,anglican:3,catholic:3,orthodox:3,pentecostal:-2,nondenom:-2,methodist:2,anabaptist:-3}},
-  { id:14,cat:'ecclesiology',text:'Is the Lord\u2019s Supper a true participation in the body and blood of Christ (real presence)?',weights:{ifb:-3,sbc:-2,reformedbap:-1,presby:1,lutheran:3,anglican:2,catholic:3,orthodox:3,pentecostal:-1,nondenom:-2,methodist:1,anabaptist:-2}},
-  { id:15,cat:'ecclesiology',text:'Is liturgical worship following an ancient order preferable to spontaneous contemporary worship?',weights:{ifb:-2,sbc:-2,reformedbap:0,presby:1,lutheran:3,anglican:3,catholic:3,orthodox:3,pentecostal:-3,nondenom:-3,methodist:1,anabaptist:0}},
-  { id:16,cat:'ecclesiology',text:'Ought church membership to be restricted to those who give credible profession of faith?',weights:{ifb:3,sbc:3,reformedbap:3,presby:0,lutheran:0,anglican:0,catholic:-1,orthodox:-1,pentecostal:2,nondenom:2,methodist:1,anabaptist:3}},
-  { id:17,cat:'creation',text:'Did God create the world in six ordinary, twenty-four-hour days?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:-1,catholic:-1,orthodox:0,pentecostal:2,nondenom:1,methodist:-1,anabaptist:1}},
-  { id:18,cat:'creation',text:'Is the earth fewer than ten thousand years old?',weights:{ifb:3,sbc:1,reformedbap:1,presby:0,lutheran:0,anglican:-2,catholic:-2,orthodox:-1,pentecostal:1,nondenom:0,methodist:-2,anabaptist:0}},
-  { id:19,cat:'creation',text:'Is theistic evolution compatible with a faithful reading of Genesis?',weights:{ifb:-3,sbc:-2,reformedbap:-1,presby:0,lutheran:0,anglican:2,catholic:2,orthodox:1,pentecostal:-2,nondenom:0,methodist:2,anabaptist:0}},
-  { id:20,cat:'creation',text:'Was the Flood of Noah a global historical event?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:0,catholic:0,orthodox:1,pentecostal:2,nondenom:1,methodist:0,anabaptist:1}},
-  { id:21,cat:'creation',text:'Were Adam and Eve historical individuals from whom all humanity descends?',weights:{ifb:3,sbc:3,reformedbap:3,presby:3,lutheran:3,anglican:1,catholic:2,orthodox:3,pentecostal:3,nondenom:2,methodist:1,anabaptist:2}},
-  { id:22,cat:'creation',text:'Is a premillennial, pretribulational rapture the proper eschatological framework?',weights:{ifb:3,sbc:2,reformedbap:-1,presby:-2,lutheran:-1,anglican:-1,catholic:-2,orthodox:-2,pentecostal:2,nondenom:1,methodist:-1,anabaptist:-1}},
-  { id:23,cat:'life',text:'Are believers called to abstain entirely from alcoholic drink?',weights:{ifb:3,sbc:1,reformedbap:-1,presby:-1,lutheran:-2,anglican:-1,catholic:-2,orthodox:-2,pentecostal:2,nondenom:0,methodist:1,anabaptist:1}},
-  { id:24,cat:'life',text:'Ought Christian women to wear head coverings in corporate worship?',weights:{ifb:2,sbc:0,reformedbap:1,presby:0,lutheran:0,anglican:0,catholic:1,orthodox:3,pentecostal:0,nondenom:-1,methodist:0,anabaptist:3}},
-  { id:25,cat:'life',text:'Is the gift of tongues for the edification of the church today?',weights:{ifb:-3,sbc:-2,reformedbap:-3,presby:-2,lutheran:-2,anglican:-1,catholic:0,orthodox:-1,pentecostal:3,nondenom:1,methodist:0,anabaptist:-1}},
-  { id:26,cat:'life',text:'Is divorce permissible on grounds beyond adultery or abandonment?',weights:{ifb:-3,sbc:-2,reformedbap:-2,presby:-1,lutheran:0,anglican:0,catholic:-3,orthodox:-2,pentecostal:-1,nondenom:0,methodist:1,anabaptist:-2}},
-  { id:27,cat:'life',text:'Is observance of the Lord\u2019s Day (Sabbath) a moral obligation upon Christians?',weights:{ifb:2,sbc:1,reformedbap:2,presby:3,lutheran:0,anglican:1,catholic:1,orthodox:1,pentecostal:1,nondenom:0,methodist:1,anabaptist:1}},
-  { id:28,cat:'life',text:'Is tithing (ten percent) a biblical duty for the New Covenant believer?',weights:{ifb:3,sbc:3,reformedbap:2,presby:2,lutheran:0,anglican:1,catholic:1,orthodox:1,pentecostal:3,nondenom:2,methodist:2,anabaptist:1}},
-  { id:29,cat:'life',text:'Should the veneration of saints and icons have a place in private devotion?',weights:{ifb:-3,sbc:-3,reformedbap:-3,presby:-3,lutheran:-2,anglican:0,catholic:3,orthodox:3,pentecostal:-3,nondenom:-3,methodist:-2,anabaptist:-3}},
-  { id:30,cat:'life',text:'Is fasting a regular and expected discipline of the Christian life?',weights:{ifb:0,sbc:0,reformedbap:1,presby:1,lutheran:1,anglican:2,catholic:3,orthodox:3,pentecostal:2,nondenom:0,methodist:1,anabaptist:1}},
-  { id:31,cat:'life',text:'Is Christian perfection (entire sanctification) attainable in this life?',weights:{ifb:0,sbc:-1,reformedbap:-2,presby:-2,lutheran:-2,anglican:0,catholic:1,orthodox:2,pentecostal:2,nondenom:0,methodist:3,anabaptist:1}},
-  { id:32,cat:'life',text:'Are dancing, theater-going, and secular entertainments generally unfit for the believer?',weights:{ifb:3,sbc:0,reformedbap:0,presby:0,lutheran:-1,anglican:-1,catholic:-2,orthodox:0,pentecostal:1,nondenom:-2,methodist:0,anabaptist:2}},
-  { id:33,cat:'authority',text:'Is pacifism the proper Christian response to war and armed conflict?',weights:{ifb:-3,sbc:-2,reformedbap:-2,presby:-2,lutheran:-1,anglican:-1,catholic:-1,orthodox:-1,pentecostal:-1,nondenom:-1,methodist:0,anabaptist:3}},
-  { id:34,cat:'authority',text:'Ought the civil magistrate to enforce both tables of the moral law (theonomy)?',weights:{ifb:0,sbc:0,reformedbap:1,presby:2,lutheran:0,anglican:0,catholic:1,orthodox:0,pentecostal:0,nondenom:0,methodist:-1,anabaptist:-3}},
-  { id:35,cat:'authority',text:'Is the ordained pastoral office restricted to qualified men?',weights:{ifb:3,sbc:3,reformedbap:3,presby:2,lutheran:1,anglican:0,catholic:3,orthodox:3,pentecostal:0,nondenom:1,methodist:-1,anabaptist:2}},
-  { id:36,cat:'authority',text:'Is it proper for a Christian to swear civil oaths?',weights:{ifb:1,sbc:1,reformedbap:1,presby:2,lutheran:1,anglican:2,catholic:2,orthodox:2,pentecostal:1,nondenom:1,methodist:1,anabaptist:-3}},
-  { id:37,cat:'authority',text:'May believers participate in civil government and political life with a clear conscience?',weights:{ifb:2,sbc:2,reformedbap:2,presby:3,lutheran:2,anglican:2,catholic:3,orthodox:2,pentecostal:1,nondenom:2,methodist:2,anabaptist:-3}},
-  { id:38,cat:'authority',text:'Is capital punishment a just prerogative of the state under the present dispensation?',weights:{ifb:3,sbc:2,reformedbap:2,presby:2,lutheran:1,anglican:0,catholic:-1,orthodox:0,pentecostal:2,nondenom:1,methodist:-1,anabaptist:-3}},
-  { id:39,cat:'authority',text:'Is separation from worldly culture a mark of a faithful Christian community?',weights:{ifb:3,sbc:1,reformedbap:2,presby:1,lutheran:0,anglican:-1,catholic:-1,orthodox:1,pentecostal:2,nondenom:0,methodist:0,anabaptist:3}},
-  { id:40,cat:'authority',text:'Is the Pope of Rome a valid successor holding universal jurisdiction in the church?',weights:{ifb:-3,sbc:-3,reformedbap:-3,presby:-3,lutheran:-3,anglican:-2,catholic:3,orthodox:-3,pentecostal:-3,nondenom:-3,methodist:-2,anabaptist:-3}},
+  // I. SCRIPTURE & DOCTRINE
+  { id:1,cat:'scripture',text:'Do you believe the Bible to be the ultimate and final authority on all matters of faith and life?',weights:{ifb:3,sbc:3,reformedbap:3,presby:2,lutheran:2,anglican:1,catholic:-2,orthodox:-2,pentecostal:2,nondenom:3,methodist:1,anabaptist:2}},
+  { id:2,cat:'scripture',text:'Do you affirm all points of the Nicene Creed?',weights:{ifb:0,sbc:1,reformedbap:2,presby:3,lutheran:3,anglican:3,catholic:3,orthodox:3,pentecostal:1,nondenom:1,methodist:2,anabaptist:1}},
+  { id:3,cat:'scripture',text:'Do you believe the King James Bible is the most reliable English Bible?',weights:{ifb:3,sbc:0,reformedbap:0,presby:0,lutheran:-1,anglican:0,catholic:-1,orthodox:-1,pentecostal:0,nondenom:-1,methodist:-1,anabaptist:0}},
+  { id:4,cat:'scripture',text:'Do you reject most modern Bible translations as corrupted?',weights:{ifb:3,sbc:-1,reformedbap:-1,presby:-1,lutheran:-1,anglican:-1,catholic:-1,orthodox:-1,pentecostal:0,nondenom:-1,methodist:-1,anabaptist:0}},
+  { id:5,cat:'scripture',text:'Do you believe the Bible should always be interpreted literally unless the text shows otherwise (e.g., the Beast of Revelation 13)?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:0,catholic:-1,orthodox:-1,pentecostal:2,nondenom:2,methodist:0,anabaptist:1}},
+  { id:6,cat:'scripture',text:'Do you believe in the Five Solas?',weights:{ifb:3,sbc:3,reformedbap:3,presby:3,lutheran:3,anglican:2,catholic:-3,orthodox:-3,pentecostal:2,nondenom:2,methodist:1,anabaptist:1}},
+
+  // II. SACRAMENTS & ORDINANCES
+  { id:7,cat:'sacraments',text:'Do you believe baptism is for believers only?',weights:{ifb:3,sbc:3,reformedbap:3,presby:-3,lutheran:-3,anglican:-2,catholic:-3,orthodox:-3,pentecostal:3,nondenom:2,methodist:-2,anabaptist:3}},
+  { id:8,cat:'sacraments',text:'Do you believe baptism must follow true repentance?',weights:{ifb:3,sbc:3,reformedbap:3,presby:-1,lutheran:-1,anglican:0,catholic:-1,orthodox:-1,pentecostal:3,nondenom:2,methodist:1,anabaptist:3}},
+  { id:9,cat:'sacraments',text:'Do you believe baptism is a symbol of salvation rather than a means of grace (like a wedding ring)?',weights:{ifb:3,sbc:3,reformedbap:2,presby:-1,lutheran:-3,anglican:-2,catholic:-3,orthodox:-3,pentecostal:2,nondenom:2,methodist:-1,anabaptist:2}},
+  { id:10,cat:'sacraments',text:'Do you believe baptism must be by full immersion only?',weights:{ifb:3,sbc:3,reformedbap:3,presby:-2,lutheran:-1,anglican:-1,catholic:-1,orthodox:2,pentecostal:3,nondenom:2,methodist:-1,anabaptist:3}},
+  { id:11,cat:'sacraments',text:'Do you believe the Lord\u2019s Supper is purely symbolic rather than the literal body and blood of Christ?',weights:{ifb:3,sbc:3,reformedbap:2,presby:-1,lutheran:-3,anglican:-2,catholic:-3,orthodox:-3,pentecostal:2,nondenom:2,methodist:-1,anabaptist:2}},
+
+  // III. SALVATION & ECCLESIOLOGY
+  { id:12,cat:'ecclesiology',text:'Do you believe that a believer should have had a personal conversion experience (a moment of conviction of sin and need for salvation)?',weights:{ifb:3,sbc:3,reformedbap:2,presby:1,lutheran:0,anglican:0,catholic:-1,orthodox:-1,pentecostal:3,nondenom:2,methodist:2,anabaptist:2}},
+  { id:13,cat:'ecclesiology',text:'Do you believe in "once saved always saved" (unless the person falls away)?',weights:{ifb:2,sbc:2,reformedbap:1,presby:1,lutheran:-1,anglican:0,catholic:-2,orthodox:-2,pentecostal:1,nondenom:1,methodist:-1,anabaptist:0}},
+  { id:14,cat:'ecclesiology',text:'Do you believe most churches today are false or apostate?',weights:{ifb:3,sbc:0,reformedbap:1,presby:0,lutheran:0,anglican:-1,catholic:-2,orthodox:-1,pentecostal:1,nondenom:0,methodist:-1,anabaptist:2}},
+  { id:15,cat:'ecclesiology',text:'Do you believe that each church should govern itself with no central authority?',weights:{ifb:3,sbc:3,reformedbap:2,presby:-2,lutheran:-1,anglican:-2,catholic:-3,orthodox:-2,pentecostal:2,nondenom:3,methodist:-2,anabaptist:2}},
+  { id:16,cat:'ecclesiology',text:'Do you believe Roman Catholicism is not truly Christian?',weights:{ifb:3,sbc:1,reformedbap:1,presby:0,lutheran:0,anglican:-2,catholic:-3,orthodox:-1,pentecostal:1,nondenom:0,methodist:-1,anabaptist:0}},
+  { id:17,cat:'ecclesiology',text:'Do you believe churches should denounce, rebuke, and completely separate from heretics and pagans (except for evangelistic purposes)?',weights:{ifb:3,sbc:1,reformedbap:2,presby:1,lutheran:1,anglican:-1,catholic:0,orthodox:0,pentecostal:2,nondenom:0,methodist:-1,anabaptist:2}},
+  { id:18,cat:'ecclesiology',text:'Do you support confrontational street preaching?',weights:{ifb:3,sbc:1,reformedbap:0,presby:-1,lutheran:-1,anglican:-2,catholic:-2,orthodox:-2,pentecostal:2,nondenom:0,methodist:0,anabaptist:-1}},
+  { id:19,cat:'ecclesiology',text:'Do you believe pastors should aggressively call out and condemn all unbiblical teachings, practices, and ideologies?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:-1,catholic:0,orthodox:0,pentecostal:2,nondenom:1,methodist:0,anabaptist:1}},
+
+  // IV. CREATION & ORIGINS
+  { id:20,cat:'creation',text:'Do you believe the creation account in the Book of Genesis is 100% literal history?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:-1,catholic:-1,orthodox:0,pentecostal:2,nondenom:1,methodist:-1,anabaptist:1}},
+  { id:21,cat:'creation',text:'Do you believe the earth is about 6,000\u201310,000 years old?',weights:{ifb:3,sbc:1,reformedbap:1,presby:0,lutheran:0,anglican:-2,catholic:-2,orthodox:-1,pentecostal:1,nondenom:0,methodist:-2,anabaptist:0}},
+  { id:22,cat:'creation',text:'Do you reject evolution in all forms?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:-1,catholic:-1,orthodox:0,pentecostal:2,nondenom:1,methodist:-1,anabaptist:1}},
+  { id:23,cat:'creation',text:'Do you believe Adam and Eve were real historical individuals?',weights:{ifb:3,sbc:3,reformedbap:3,presby:3,lutheran:3,anglican:1,catholic:2,orthodox:3,pentecostal:3,nondenom:2,methodist:1,anabaptist:2}},
+  { id:24,cat:'creation',text:'Do you believe Noah\u2019s flood covered the entire earth, annihilating all life?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:0,catholic:0,orthodox:1,pentecostal:2,nondenom:1,methodist:0,anabaptist:1}},
+  { id:25,cat:'creation',text:'Do you believe all humans today descend from Noah after the flood?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:1,anglican:0,catholic:0,orthodox:1,pentecostal:2,nondenom:1,methodist:0,anabaptist:1}},
+
+  // V. CHRISTIAN LIFE & CONDUCT
+  { id:26,cat:'life',text:'Do you believe Christians should follow strict modest dress standards?',weights:{ifb:3,sbc:1,reformedbap:1,presby:0,lutheran:0,anglican:-1,catholic:0,orthodox:2,pentecostal:2,nondenom:0,methodist:0,anabaptist:3}},
+  { id:27,cat:'life',text:'Do you believe men should have short hair and women long hair as a command?',weights:{ifb:3,sbc:0,reformedbap:1,presby:0,lutheran:0,anglican:-1,catholic:0,orthodox:2,pentecostal:2,nondenom:0,methodist:0,anabaptist:3}},
+  { id:28,cat:'life',text:'Do you believe women should not teach or have authority over men in church and most other contexts?',weights:{ifb:3,sbc:3,reformedbap:3,presby:2,lutheran:1,anglican:0,catholic:3,orthodox:3,pentecostal:0,nondenom:1,methodist:-2,anabaptist:2}},
+  { id:29,cat:'life',text:'Do you believe men and women have strictly separate, God-ordained roles?',weights:{ifb:3,sbc:3,reformedbap:3,presby:2,lutheran:1,anglican:0,catholic:2,orthodox:2,pentecostal:1,nondenom:1,methodist:-1,anabaptist:2}},
+  { id:30,cat:'life',text:'Do you oppose all forms of LGBTQ+ acceptance, including legal recognition?',weights:{ifb:3,sbc:3,reformedbap:3,presby:2,lutheran:1,anglican:0,catholic:2,orthodox:2,pentecostal:3,nondenom:1,methodist:0,anabaptist:1}},
+  { id:31,cat:'life',text:'Do you believe Christians should avoid secular entertainment?',weights:{ifb:3,sbc:0,reformedbap:0,presby:0,lutheran:-1,anglican:-1,catholic:-2,orthodox:0,pentecostal:1,nondenom:-1,methodist:0,anabaptist:2}},
+  { id:32,cat:'life',text:'Do you believe Christians should avoid secular music entirely?',weights:{ifb:3,sbc:0,reformedbap:0,presby:0,lutheran:-1,anglican:-1,catholic:-2,orthodox:0,pentecostal:1,nondenom:-1,methodist:0,anabaptist:2}},
+  { id:33,cat:'life',text:'Do you believe drinking alcohol is always sinful?',weights:{ifb:3,sbc:2,reformedbap:-1,presby:-1,lutheran:-2,anglican:-1,catholic:-2,orthodox:-2,pentecostal:2,nondenom:0,methodist:1,anabaptist:1}},
+  { id:34,cat:'life',text:'Do you believe Christians should avoid close friendships with non-believers?',weights:{ifb:3,sbc:0,reformedbap:0,presby:0,lutheran:-1,anglican:-1,catholic:-1,orthodox:0,pentecostal:1,nondenom:0,methodist:-1,anabaptist:2}},
+  { id:35,cat:'life',text:'Do you believe the modern world is irredeemably corrupt and hostile to true Christianity?',weights:{ifb:3,sbc:1,reformedbap:1,presby:0,lutheran:0,anglican:-1,catholic:-1,orthodox:0,pentecostal:2,nondenom:0,methodist:-1,anabaptist:2}},
+
+  // VI. AUTHORITY & SOCIETY
+  { id:36,cat:'authority',text:'Do you believe strong, harsh preaching is necessary and biblical?',weights:{ifb:3,sbc:1,reformedbap:1,presby:0,lutheran:0,anglican:-2,catholic:-1,orthodox:-1,pentecostal:2,nondenom:0,methodist:-1,anabaptist:0}},
+  { id:37,cat:'authority',text:'Do you believe pastors should exercise strong authority over members\u2019 lives?',weights:{ifb:3,sbc:1,reformedbap:1,presby:1,lutheran:0,anglican:0,catholic:1,orthodox:1,pentecostal:2,nondenom:-1,methodist:0,anabaptist:1}},
+  { id:38,cat:'authority',text:'Do you believe homeschooling is preferable or necessary to protect children\u2019s faith?',weights:{ifb:3,sbc:1,reformedbap:2,presby:1,lutheran:0,anglican:-1,catholic:0,orthodox:0,pentecostal:1,nondenom:1,methodist:-1,anabaptist:3}},
+  { id:39,cat:'authority',text:'Do you believe physical discipline is a required biblical method in raising children?',weights:{ifb:3,sbc:2,reformedbap:2,presby:1,lutheran:0,anglican:-1,catholic:0,orthodox:0,pentecostal:2,nondenom:1,methodist:0,anabaptist:1}},
+  { id:40,cat:'authority',text:'Do you believe that all leadership roles and positions are strictly reserved for men?',weights:{ifb:3,sbc:3,reformedbap:3,presby:2,lutheran:1,anglican:0,catholic:3,orthodox:3,pentecostal:0,nondenom:1,methodist:-2,anabaptist:2}},
+  { id:41,cat:'authority',text:'Do you believe that Christians should engage in politics?',weights:{ifb:2,sbc:2,reformedbap:2,presby:3,lutheran:2,anglican:2,catholic:3,orthodox:2,pentecostal:1,nondenom:1,methodist:2,anabaptist:-3}},
+  { id:42,cat:'authority',text:'Do you believe that all non-Christians go to hell?',weights:{ifb:3,sbc:3,reformedbap:3,presby:3,lutheran:2,anglican:0,catholic:0,orthodox:0,pentecostal:3,nondenom:2,methodist:0,anabaptist:2}},
+  { id:43,cat:'authority',text:'Do you believe that Christians can and should be armed and have the right to use lethal force in self-defense?',weights:{ifb:3,sbc:2,reformedbap:2,presby:2,lutheran:1,anglican:0,catholic:1,orthodox:0,pentecostal:1,nondenom:1,methodist:0,anabaptist:-3}},
 ];
 
 const CATEGORIES = [
   { id:'scripture',roman:'I.',name:'Scripture & Doctrine',subtitle:'On the Authority of Holy Writ and the Rule of Faith' },
-  { id:'ecclesiology',roman:'II.',name:'Ecclesiology',subtitle:'On the Nature, Order, and Sacraments of Christ\u2019s Church' },
-  { id:'creation',roman:'III.',name:'Creation & Origins',subtitle:'On the Works of God in the Beginning and the End' },
-  { id:'life',roman:'IV.',name:'Christian Life & Conduct',subtitle:'On Piety, Worship, and the Discipline of the Faithful' },
-  { id:'authority',roman:'V.',name:'Authority & Society',subtitle:'On the Offices of Men and the Affairs of the Commonwealth' },
+  { id:'sacraments',roman:'II.',name:'Sacraments & Ordinances',subtitle:'On Baptism, the Lord\u2019s Supper, and the Means of Grace' },
+  { id:'ecclesiology',roman:'III.',name:'Salvation & Ecclesiology',subtitle:'On the Nature of the Church and the Salvation of Souls' },
+  { id:'creation',roman:'IV.',name:'Creation & Origins',subtitle:'On the Works of God in the Beginning and the End' },
+  { id:'life',roman:'V.',name:'Christian Life & Conduct',subtitle:'On Piety, Modesty, and the Discipline of the Faithful' },
+  { id:'authority',roman:'VI.',name:'Authority & Society',subtitle:'On the Offices of Men and the Affairs of the Commonwealth' },
 ];
 
 const SEED = [];
@@ -229,7 +244,7 @@ function Questionnaire({ onSubmit, goTo, questions }) {
   const answeredNum = Object.keys(answers).length;
   const pct = Math.round((answeredNum / questions.length) * 100);
   const categorized = useMemo(() => CATEGORIES.map(c => ({ cat:c, items:questions.filter(q=>q.cat===c.id) })), [questions]);
-  const canSubmit = name.trim().length > 0 && answeredNum >= 30;
+  const canSubmit = name.trim().length > 0 && answeredNum >= 33;
 
   const handleSubmit = () => {
     const sub = { id:'s-'+Date.now(), name:name.trim(), date:new Date().toISOString().slice(0,10), answers, notes };
