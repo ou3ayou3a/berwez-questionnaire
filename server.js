@@ -101,6 +101,84 @@ Keep it under 400 words. Write in second person ("You lean toward..."). Do not u
   }
 });
 
+// ── CLAUDE AI WEIGHT GENERATION ──────────────────────────────────────────────
+app.post("/api/generate-weights", async (req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured." });
+
+  const { questionText } = req.body;
+  if (!questionText) return res.status(400).json({ error: "No question text provided." });
+
+  const prompt = `You are a Christian systematic theologian. Given a doctrinal question from a denominational alignment questionnaire, assign a weight between -3 and +3 for each of the 12 denominations below. The weight represents how likely a member of that denomination would answer "Yes" to this question:
+
++3 = strongly characteristic, almost all would say Yes
++2 = commonly held, most would say Yes
++1 = leaning Yes but not defining
+ 0 = neutral, no strong lean either way
+-1 = leaning No but not defining
+-2 = commonly rejected, most would say No
+-3 = strongly against, almost all would say No
+
+The 12 denominations:
+- ifb: Independent Fundamental Baptist (KJV-only, dispensational, separatist, very conservative)
+- sbc: Southern Baptist Convention (evangelical, congregational, conservative Protestant)
+- reformedbap: Reformed Baptist (Calvinistic soteriology, 1689 confession, credobaptist)
+- presby: Reformed / Presbyterian (covenantal, confessional, elder-led, paedobaptist)
+- lutheran: Lutheran (sacramental, law & gospel, two kingdoms doctrine)
+- anglican: Anglican (via media, Book of Common Prayer, broad church)
+- catholic: Roman Catholic (Magisterium, seven sacraments, papal authority)
+- orthodox: Eastern Orthodox (Holy Tradition, theosis, seven ecumenical councils)
+- pentecostal: Pentecostal (Spirit baptism, charismatic gifts, revivalist)
+- nondenom: Non-Denominational (low church, contemporary, Bible-focused, flexible)
+- methodist: Methodist (Wesleyan holiness, prevenient grace, connectional)
+- anabaptist: Anabaptist (discipleship, nonviolence, separation from the world)
+
+The question is: "${questionText}"
+
+Respond with ONLY a JSON object, no explanation, no markdown, no backticks. Example format:
+{"ifb":2,"sbc":1,"reformedbap":0,"presby":-1,"lutheran":0,"anglican":1,"catholic":-2,"orthodox":-2,"pentecostal":1,"nondenom":0,"methodist":1,"anabaptist":-1}`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 200,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("Claude API error (weights):", err);
+      return res.status(500).json({ error: "Claude API error." });
+    }
+
+    const data = await response.json();
+    const text = (data.content?.map(b => b.text || '').join('') || '').trim();
+    const clean = text.replace(/```json|```/g, '').trim();
+    const weights = JSON.parse(clean);
+
+    // Validate: must have all 12 keys, values between -3 and 3
+    const ids = ['ifb','sbc','reformedbap','presby','lutheran','anglican','catholic','orthodox','pentecostal','nondenom','methodist','anabaptist'];
+    const valid = {};
+    ids.forEach(id => {
+      const v = Number(weights[id]);
+      valid[id] = isNaN(v) ? 0 : Math.max(-3, Math.min(3, Math.round(v)));
+    });
+
+    res.json({ weights: valid });
+  } catch (err) {
+    console.error("Weight generation failed:", err);
+    res.status(500).json({ error: "Failed to generate weights." });
+  }
+});
+
 app.use(express.static(path.join(__dirname, "dist")));
 // Express 5 wildcard syntax
 app.get("/{*splat}", (req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));

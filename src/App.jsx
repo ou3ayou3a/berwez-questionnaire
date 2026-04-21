@@ -596,7 +596,25 @@ function Admin({ submissions, questions, setQuestions, onWipeResponses, onResetQ
   const saveEdit = (id, changes) => { setQuestions(qs=>qs.map(q=>q.id===id?{...q,...changes}:q)); setEditingId(null); };
   const delQ = id => { if (confirm('Delete question permanently?')) setQuestions(qs=>qs.filter(q=>q.id!==id)); };
   const moveQ = (idx, delta) => { setQuestions(qs=>{ const n=[...qs]; const t=idx+delta; if(t<0||t>=n.length) return qs; [n[idx],n[t]]=[n[t],n[idx]]; return n; }); };
-  const addNew = () => { if (!newText.trim()) return; const nextId=Math.max(...questions.map(q=>q.id))+1; const weights={}; DENOMS.forEach(d=>weights[d.id]=0); setQuestions(qs=>[...qs,{id:nextId,cat:newCat,text:newText.trim(),weights}]); setNewText(''); setAdding(false); };
+  const [generatingWeights, setGeneratingWeights] = useState(false);
+  const addNew = async () => {
+    if (!newText.trim() || generatingWeights) return;
+    setGeneratingWeights(true);
+    const nextId = Math.max(...questions.map(q=>q.id)) + 1;
+    let weights = {};
+    DENOMS.forEach(d => weights[d.id] = 0);
+    try {
+      const res = await fetch('/api/generate-weights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionText: newText.trim() }),
+      });
+      const data = await res.json();
+      if (data.weights) weights = data.weights;
+    } catch (e) { console.error('Weight generation failed, using zeros:', e); }
+    setQuestions(qs => [...qs, { id: nextId, cat: newCat, text: newText.trim(), weights }]);
+    setNewText(''); setAdding(false); setGeneratingWeights(false);
+  };
 
   return (
     <PageFrame wide>
@@ -621,7 +639,7 @@ function Admin({ submissions, questions, setQuestions, onWipeResponses, onResetQ
       </div>
       <div style={{ marginTop:30 }}>
         <div className="section-title" style={{ justifyContent:'space-between', display:'flex' }}><span className="name" style={{ color:'var(--wine)' }}>Questions ({questions.length})</span><button className="btn small" onClick={()=>setAdding(v=>!v)}>+ Add</button></div><GoldLine />
-        {adding&&<div className="q-admin-edit" style={{ marginTop:12 }}><textarea className="input" rows={3} placeholder="New question text…" value={newText} onChange={e=>setNewText(e.target.value)} /><div style={{ display:'flex', gap:10, marginTop:10, alignItems:'center' }}><select className="select" value={newCat} onChange={e=>setNewCat(e.target.value)} style={{ maxWidth:280 }}>{CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.roman} {c.name}</option>)}</select><div style={{ marginLeft:'auto', display:'flex', gap:8 }}><button className="btn small" onClick={()=>{setAdding(false);setNewText('');}}>Cancel</button><button className="btn primary small" onClick={addNew}>Add Question</button></div></div></div>}
+        {adding&&<div className="q-admin-edit" style={{ marginTop:12 }}><textarea className="input" rows={3} placeholder="New question text…" value={newText} onChange={e=>setNewText(e.target.value)} disabled={generatingWeights} /><div style={{ display:'flex', gap:10, marginTop:10, alignItems:'center' }}><select className="select" value={newCat} onChange={e=>setNewCat(e.target.value)} style={{ maxWidth:280 }} disabled={generatingWeights}>{CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.roman} {c.name}</option>)}</select><div style={{ marginLeft:'auto', display:'flex', gap:8 }}><button className="btn small" onClick={()=>{setAdding(false);setNewText('');}} disabled={generatingWeights}>Cancel</button><button className="btn primary small" onClick={addNew} disabled={generatingWeights}>{generatingWeights ? '✠ Calibrating weights…' : 'Add Question'}</button></div></div>{generatingWeights && <div className="italic-serif" style={{ color:'var(--gold)', marginTop:10, fontSize:13 }}>AI is assigning denomination weights to this question…</div>}</div>}
         <div style={{ marginTop:14, border:'1px solid rgba(139,105,20,0.25)', background:'var(--cream)' }}>
           {questions.map((q,idx) => editingId===q.id ? (
             <div key={q.id} className="q-admin-edit"><textarea className="input" rows={3} defaultValue={q.text} id={`edit-${q.id}`} /><div style={{ display:'flex', gap:10, marginTop:10, alignItems:'center' }}><select className="select" defaultValue={q.cat} id={`cat-${q.id}`} style={{ maxWidth:280 }}>{CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.roman} {c.name}</option>)}</select><div style={{ marginLeft:'auto', display:'flex', gap:8 }}><button className="btn small" onClick={()=>setEditingId(null)}>Cancel</button><button className="btn primary small" onClick={()=>saveEdit(q.id,{text:document.getElementById(`edit-${q.id}`).value,cat:document.getElementById(`cat-${q.id}`).value})}>Save</button></div></div></div>
