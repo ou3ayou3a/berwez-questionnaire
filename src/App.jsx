@@ -212,12 +212,37 @@ function QuestionCard({ q, num, answer, note, onAnswer, onNote }) {
 function ResultsScreen({ submission, questions, onDone }) {
   const scores = useMemo(() => scoreSubmission(submission, questions), [submission, questions]);
   const top5 = scores.slice(0,5);
+  const [analysis, setAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisErr, setAnalysisErr] = useState(null);
+
+  const requestAnalysis = async () => {
+    setAnalyzing(true); setAnalysisErr(null);
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: submission.name,
+          answers: submission.answers,
+          notes: submission.notes || {},
+          scores,
+          questions,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { setAnalysisErr(data.error); }
+      else { setAnalysis(data.analysis); }
+    } catch (e) { setAnalysisErr('Network error — could not reach the server.'); }
+    setAnalyzing(false);
+  };
+
   return (
     <div className="fade-in">
       <div style={{ textAlign:'center', marginBottom:8 }}>
         <div className="smallcaps" style={{ color:'var(--gold)', fontSize:13 }}>Testimony Received</div>
         <h1 className="display" style={{ color:'var(--wine)', fontSize:48, margin:'6px 0 2px', fontWeight:500 }}>Thy Five Closest Kindreds</h1>
-        <div className="italic-serif" style={{ color:'var(--gold)', fontSize:16 }}>According to the Forty Answers of <strong>{submission.name}</strong></div>
+        <div className="italic-serif" style={{ color:'var(--gold)', fontSize:16 }}>According to the Answers of <strong>{submission.name}</strong></div>
       </div>
       <OrnamentDivider glyph="✠" />
       <div style={{ marginTop:20 }}>
@@ -231,6 +256,35 @@ function ResultsScreen({ submission, questions, onDone }) {
           </div>
         ))}
       </div>
+
+      {/* AI Analysis Section */}
+      <OrnamentDivider glyph="❦" />
+      {!analysis && !analyzing && (
+        <div style={{ textAlign:'center', marginTop:20 }}>
+          <div className="italic-serif" style={{ color:'var(--espresso-soft)', marginBottom:14, fontSize:15 }}>
+            Want to understand what your answers reveal about your theological identity?
+          </div>
+          <button className="btn primary" onClick={requestAnalysis} style={{ fontSize:13, padding:'14px 36px' }}>
+            ✠  Get AI Theological Analysis  ✠
+          </button>
+          {analysisErr && <div style={{ color:'var(--red)', marginTop:12, fontStyle:'italic', fontSize:14 }}>{analysisErr}</div>}
+        </div>
+      )}
+      {analyzing && (
+        <div style={{ textAlign:'center', padding:'30px 20px' }}>
+          <div style={{ color:'var(--gold)', fontSize:32, marginBottom:10 }}>✠</div>
+          <div className="italic-serif" style={{ color:'var(--espresso-soft)', fontSize:16 }}>The theologian is examining thy testimony…</div>
+        </div>
+      )}
+      {analysis && (
+        <div className="summary-box fade-in" style={{ marginTop:20 }}>
+          <h4>Theological Analysis for {submission.name}</h4>
+          {analysis.split('\n\n').map((para, i) => (
+            <p key={i} style={{ fontSize:15.5, lineHeight:1.65 }}>{para}</p>
+          ))}
+        </div>
+      )}
+
       <div style={{ textAlign:'center', marginTop:28 }}><button className="btn" onClick={onDone}>View Community Board</button></div>
     </div>
   );
