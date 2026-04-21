@@ -71,13 +71,7 @@ const CATEGORIES = [
   { id:'authority',roman:'V.',name:'Authority & Society',subtitle:'On the Offices of Men and the Affairs of the Commonwealth' },
 ];
 
-const SEED = [
-  {id:'s-anselm',name:'Anselm Bekele',date:'2026-04-02',answers:{1:'partial',2:'yes',3:'no',4:'yes',5:'yes',6:'partial',7:'partial',8:'partial',9:'yes',10:'no',11:'yes',12:'partial',13:'yes',14:'yes',15:'yes',16:'partial',17:'no',18:'no',19:'yes',20:'partial',21:'yes',22:'no',23:'no',24:'no',25:'partial',26:'partial',27:'partial',28:'partial',29:'partial',30:'yes',31:'no',32:'no',33:'partial',34:'no',35:'partial',36:'yes',37:'yes',38:'partial',39:'no',40:'no'},notes:{5:'The creeds structure everything.',15:'BCP daily office daily.'}},
-  {id:'s-bede',name:'Bede Farrow',date:'2026-04-03',answers:{1:'yes',2:'no',3:'no',4:'yes',5:'yes',6:'yes',7:'no',8:'no',9:'yes',10:'no',11:'no',12:'yes',13:'no',14:'no',15:'partial',16:'yes',17:'partial',18:'partial',19:'no',20:'yes',21:'yes',22:'no',23:'partial',24:'no',25:'no',26:'no',27:'yes',28:'yes',29:'no',30:'partial',31:'no',32:'no',33:'no',34:'partial',35:'yes',36:'yes',37:'yes',38:'yes',39:'partial',40:'no'},notes:{6:'1689 LBCF, chapter 3.'}},
-  {id:'s-cyprian',name:'Cyprian Oduya',date:'2026-04-05',answers:{1:'no',2:'yes',3:'no',4:'no',5:'yes',6:'no',7:'yes',8:'yes',9:'partial',10:'partial',11:'yes',12:'partial',13:'yes',14:'yes',15:'yes',16:'partial',17:'partial',18:'no',19:'yes',20:'partial',21:'yes',22:'no',23:'no',24:'partial',25:'partial',26:'no',27:'yes',28:'partial',29:'yes',30:'yes',31:'partial',32:'partial',33:'partial',34:'partial',35:'yes',36:'yes',37:'yes',38:'no',39:'no',40:'yes'},notes:{40:'Peter\u2019s chair.'}},
-  {id:'s-dorothea',name:'Dorothea Vance',date:'2026-04-07',answers:{1:'no',2:'yes',3:'no',4:'no',5:'yes',6:'no',7:'yes',8:'yes',9:'no',10:'partial',11:'yes',12:'yes',13:'yes',14:'yes',15:'yes',16:'no',17:'partial',18:'no',19:'partial',20:'yes',21:'yes',22:'no',23:'no',24:'yes',25:'no',26:'partial',27:'yes',28:'yes',29:'yes',30:'yes',31:'yes',32:'no',33:'partial',34:'no',35:'yes',36:'yes',37:'partial',38:'no',39:'yes',40:'no'},notes:{}},
-  {id:'s-ephraim',name:'Ephraim Kline',date:'2026-04-09',answers:{1:'yes',2:'partial',3:'no',4:'yes',5:'yes',6:'partial',7:'partial',8:'no',9:'yes',10:'no',11:'partial',12:'partial',13:'yes',14:'yes',15:'yes',16:'partial',17:'partial',18:'no',19:'partial',20:'partial',21:'yes',22:'no',23:'no',24:'no',25:'no',26:'partial',27:'partial',28:'partial',29:'no',30:'partial',31:'no',32:'no',33:'no',34:'no',35:'partial',36:'yes',37:'yes',38:'partial',39:'no',40:'no'},notes:{14:'\u201CIn, with, and under.\u201D'}},
-];
+const SEED = [];
 
 // ═══════════════════════════════════════════════════════════════════
 // SCORING ENGINE
@@ -489,24 +483,30 @@ function PersonDetail({ sub, onBack, onDelete, questions }) {
           <div style={{ marginTop:10 }}>{items.map(q => <div key={q.id} style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(139,105,20,0.12)' }}><div style={{ fontSize:15 }}><span className="q-num">{q.id}.</span>{q.text}{sub.notes?.[q.id]&&<div className="italic-serif" style={{ fontSize:13, color:'var(--espresso-soft)', marginTop:4 }}>"{sub.notes[q.id]}"</div>}</div><div><AnswerBadge value={sub.answers[q.id]} /></div></div>)}</div>
         </div>
       ); })}
-      <div style={{ marginTop:36, paddingTop:20, borderTop:'1px solid var(--red)' }}><button className="btn danger" onClick={()=>{if(confirm('Delete '+sub.name+"'s response permanently?"))onDelete(sub.id);}}>✗ Delete Response</button></div>
+      {onDelete && <div style={{ marginTop:36, paddingTop:20, borderTop:'1px solid var(--red)' }}><button className="btn danger" onClick={()=>{if(confirm('Delete '+sub.name+"'s response permanently?"))onDelete(sub.id);}}>✗ Delete Response</button></div>}
     </div>
   );
 }
 
-function Dashboard({ submissions, onDelete, authed, setAuthed, questions }) {
+function Dashboard({ submissions, questions }) {
   const [detailId, setDetailId] = useState(null);
-  if (!authed) return <PasswordGate onUnlock={()=>setAuthed(true)} title="Dashboard Gate" />;
-  if (detailId) { const sub = submissions.find(s=>s.id===detailId); if (!sub) { setDetailId(null); return null; } return <PageFrame><PersonDetail sub={sub} questions={questions} onBack={()=>setDetailId(null)} onDelete={id=>{onDelete(id);setDetailId(null);}} /></PageFrame>; }
+  if (detailId) { const sub = submissions.find(s=>s.id===detailId); if (!sub) { setDetailId(null); return null; } return <PageFrame><PersonDetail sub={sub} questions={questions} onBack={()=>setDetailId(null)} /></PageFrame>; }
   return (
     <PageFrame wide>
       <header style={{ textAlign:'center' }}>
-        <div className="smallcaps" style={{ color:'var(--gold)', fontSize:12 }}>✠ Administrator ✠</div>
+        <div className="smallcaps" style={{ color:'var(--gold)', fontSize:12 }}>✠ All Testimonies ✠</div>
         <h1 className="display" style={{ color:'var(--wine)', fontSize:48, margin:'6px 0', fontWeight:500 }}>Dashboard</h1>
-        <div className="italic-serif" style={{ color:'var(--gold)' }}>All {submissions.length} testimonies · Click any to view detail</div>
+        <div className="italic-serif" style={{ color:'var(--gold)' }}>{submissions.length === 0 ? 'No testimonies yet — be the first to fill the questionnaire.' : `All ${submissions.length} testimonies · Click any to view detail`}</div>
       </header>
       <OrnamentDivider glyph="❦" />
-      <div className="person-grid">{submissions.map(s=><PersonCard key={s.id} sub={s} questions={questions} onSelect={()=>setDetailId(s.id)} />)}</div>
+      {submissions.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'60px 20px' }}>
+          <div style={{ color:'var(--gold)', fontSize:48, marginBottom:12 }}>✠</div>
+          <div className="italic-serif" style={{ color:'var(--espresso-soft)', fontSize:18 }}>The scroll is empty. Share the link and gather thy brethren.</div>
+        </div>
+      ) : (
+        <div className="person-grid">{submissions.map(s=><PersonCard key={s.id} sub={s} questions={questions} onSelect={()=>setDetailId(s.id)} />)}</div>
+      )}
     </PageFrame>
   );
 }
@@ -575,7 +575,6 @@ export default function App() {
   const [submissions, setSubmissions] = useState(null);
   const [questions, setQuestions] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dashAuthed, setDashAuthed] = useState(false);
   const [adminAuthed, setAdminAuthed] = useState(false);
 
   // Load from API on mount
@@ -611,7 +610,7 @@ export default function App() {
       <Nav tab={tab} setTab={setTab} />
       {tab === 'questionnaire' && <Questionnaire onSubmit={addSub} goTo={setTab} questions={questions} />}
       {tab === 'community' && <Community submissions={submissions} questions={questions} />}
-      {tab === 'dashboard' && <Dashboard submissions={submissions} onDelete={delSub} authed={dashAuthed} setAuthed={setDashAuthed} questions={questions} />}
+      {tab === 'dashboard' && <Dashboard submissions={submissions} questions={questions} />}
       {tab === 'admin' && <Admin submissions={submissions} questions={questions} setQuestions={setQuestions} onWipeResponses={wipe} onResetQuestions={resetQ} authed={adminAuthed} setAuthed={setAdminAuthed} />}
       <footer style={{ textAlign:'center', padding:'30px 20px 60px', color:'var(--espresso-soft)', fontFamily:'var(--serif-display)', fontSize:13, letterSpacing:'0.15em', textTransform:'uppercase', opacity:0.7 }}>
         <div style={{ color:'var(--gold)', fontSize:18, marginBottom:6 }}>✠ ❦ ✠</div>
